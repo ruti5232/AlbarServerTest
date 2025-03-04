@@ -2,11 +2,7 @@
 using BLL.DTOs;
 using DAL.Entities;
 using DAL.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace BLL.Services
 {
@@ -21,14 +17,42 @@ namespace BLL.Services
         }
         public async Task<LogDTO> AddAsync(LogDTO logDto)
         {
-            //return _mapper.Map<LogDTO>(await _logRepository.AddAsync(_mapper.Map<Log>(logDto)));
-            var logEntity = _mapper.Map<Log>(logDto);
-            var addedLog = await _logRepository.AddAsync(logEntity);
-            return _mapper.Map<LogDTO>(addedLog);
+            try
+            {
+                var logEntity = _mapper.Map<Log>(logDto);
+                var addedLog = await _logRepository.AddAsync(logEntity);
+                return _mapper.Map<LogDTO>(addedLog);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorToFileAsync(ex);
+                throw;
+            }
+
         }
         public async Task LogErrorAsync(string message, Exception ex)
         {
             await _logRepository.LogErrorAsync(message, ex);
+        }
+
+        private async Task LogErrorToFileAsync(Exception ex)
+        {
+            string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "log.txt");
+            try
+            {
+                string errorMessage = $"[{DateTime.Now}] - Error: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}{Environment.NewLine}";
+
+                string directory = Path.GetDirectoryName(logFilePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                await File.AppendAllTextAsync(logFilePath, errorMessage);
+            }
+            catch (Exception fileEx)
+            {
+                Console.WriteLine($"Failed to write to log file: {fileEx.Message}");
+            }
         }
     }
 }

@@ -1,11 +1,7 @@
 ﻿using DAL.Data;
 using DAL.Entities;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace DAL.Repositories
 {
@@ -24,9 +20,7 @@ namespace DAL.Repositories
         public async Task<Log> AddAsync(Log log)
         {
             var res = await _appDbContext.Logs.AddAsync(log);
-            Console.WriteLine($"Entity State Before SaveChanges: {_appDbContext.Entry(log).State}");
             await SaveChangesAsync();
-            Console.WriteLine($"Entity State After SaveChanges: {_appDbContext.Entry(log).State}");
             return res.Entity;
         }
 
